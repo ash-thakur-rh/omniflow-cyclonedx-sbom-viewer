@@ -22,7 +22,7 @@
     "autoprefixer": "10.4.21",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
-    "postcss": "8.5.14",
+    "postcss": "8.5.15",
     "tailwindcss": "3.4.17",
     "typescript": "5.8.3"
   },
@@ -30,6 +30,6 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "next": "$next",
-    "postcss": "8.5.14"
+    "postcss": "8.5.15"
   }
 }
