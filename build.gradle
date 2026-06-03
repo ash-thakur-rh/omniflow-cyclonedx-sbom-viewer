@@ -1,0 +1,19 @@
+description = 'OmniFlow plugin: CycloneDX SBOM viewer with component inventory, dependency analysis, and embedded Next.js UI'
+
+tasks.named('buildUi') {
+  inputs.dir("${projectDir}/ui/components")
+  inputs.dir("${projectDir}/ui/lib")
+}
+
+jar {
+  archiveBaseName = 'cyclonedx-sbom'
+  manifest {
+    attributes(
+      'Plugin-Id'         : 'cyclonedx-sbom',
+      'Plugin-Version'    : project.version,
+      'Plugin-Api-Version': '0.1',
+      'Plugin-Class'      : 'io.github.agnistack.omniflow.plugins.cyclonedx.CycloneDxSbomPlugin',
+      'Implementation-Version': project.version
+    )
+  }
+}
