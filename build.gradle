@@ -16,7 +16,7 @@ repositories { mavenCentral() }
 
 dependencies {
   compileOnly 'io.github.agnistack:omniflow-plugin-api:0.2.5'
-  implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.4'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.0'
 }
 
 // ── Node / npm ────────────────────────────────────────────────────────────────
