@@ -1,19 +1,77 @@
-description = 'OmniFlow plugin: CycloneDX SBOM viewer with component inventory, dependency analysis, and embedded Next.js UI'
+import com.github.gradle.node.npm.task.NpmTask
 
-tasks.named('buildUi') {
-  inputs.dir("${projectDir}/ui/components")
-  inputs.dir("${projectDir}/ui/lib")
+plugins {
+  id 'java'
+  id 'com.github.node-gradle.node' version '7.1.0'
 }
 
+group   = 'io.github.agnistack.omniflow.plugins'
+version = project.findProperty('releaseVersion') ?: project.version
+
+description = 'OmniFlow plugin: CycloneDX SBOM viewer with component inventory, dependency analysis, and embedded Next.js UI'
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+repositories { mavenCentral() }
+
+dependencies {
+  compileOnly 'io.github.agnistack:omniflow-plugin-api:0.2.3'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.4'
+}
+
+// ── Node / npm ────────────────────────────────────────────────────────────────
+node {
+  version        = '22.14.0'
+  npmVersion     = '10.9.2'
+  download       = true
+  nodeProjectDir = file("${projectDir}/ui")
+}
+
+def uiOutDir      = file("${projectDir}/ui/out")
+def uiResourceDir = file("${projectDir}/src/main/resources/static-ui")
+def skipUi        = { project.hasProperty('skipUi') }
+
+tasks.named('nodeSetup')  { onlyIf { !skipUi() } }
+tasks.named('npmSetup')   { onlyIf { !skipUi() } }
+tasks.named('npmInstall') { onlyIf { !skipUi() } }
+
+tasks.register('buildUi', NpmTask) {
+  dependsOn tasks.named('npmInstall')
+  onlyIf      { !skipUi() }
+  args        = ['run', 'build']
+  environment = ['NEXT_BUILD_FOR_JAR': '1']
+  inputs.dir("${projectDir}/ui/app")
+  inputs.dir("${projectDir}/ui/components")
+  inputs.dir("${projectDir}/ui/lib")
+  inputs.file("${projectDir}/ui/next.config.ts")
+  inputs.file("${projectDir}/ui/tailwind.config.ts")
+  inputs.file("${projectDir}/ui/package.json")
+  outputs.dir(uiOutDir)
+}
+
+tasks.register('copyUiAssets', Copy) {
+  dependsOn tasks.named('buildUi')
+  onlyIf { !skipUi() }
+  from uiOutDir
+  into uiResourceDir
+}
+
+processResources.dependsOn tasks.named('copyUiAssets')
+
+// ── Fat JAR ───────────────────────────────────────────────────────────────────
 jar {
   archiveBaseName = 'cyclonedx-sbom'
+  from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   manifest {
     attributes(
-      'Plugin-Id'         : 'cyclonedx-sbom',
-      'Plugin-Version'    : project.version,
-      'Plugin-Api-Version': '0.1',
-      'Plugin-Class'      : 'io.github.agnistack.omniflow.plugins.cyclonedx.CycloneDxSbomPlugin',
+      'Plugin-Id'             : 'cyclonedx-sbom',
+      'Plugin-Version'        : project.version,
+      'Plugin-Api-Version'    : '0.1',
+      'Plugin-Class'          : 'io.github.agnistack.omniflow.plugins.cyclonedx.CycloneDxSbomPlugin',
       'Implementation-Version': project.version
     )
   }
 }
+
+clean { delete uiResourceDir }
