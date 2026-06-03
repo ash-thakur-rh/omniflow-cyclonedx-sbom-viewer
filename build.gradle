@@ -22,7 +22,7 @@ dependencies {
 // ── Node / npm ────────────────────────────────────────────────────────────────
 node {
   version        = '22.14.0'
-  npmVersion     = '11.12.1'
+  npmVersion     = '11.16.0'
   download       = true
   nodeProjectDir = file("${projectDir}/ui")
 }
